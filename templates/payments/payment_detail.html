@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment #{{ payment.pk }} - {{ payment.customer.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{% url 'payment_list' %}">Payments</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'customer_detail' payment.customer.pk %}">{{ payment.customer.name }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Payment #{{ payment.pk }}</li>
+                    </ol>
+                </nav>
+                <h1>Payment #{{ payment.pk }}</h1>
+                <p class="text-muted mb-0">from {{ payment.customer.name }}</p>
+            </div>
+            <div class="btn-group" role="group">
+                <a href="{% url 'payment_edit' payment.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-2"></i>Edit
+                </a>
+                {% if payment.job %}
+                <a href="{% url 'job_detail' payment.job.pk %}" class="btn btn-outline-info">
+                    <i class="bi bi-briefcase me-2"></i>View Job
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Status Alert -->
+{% if payment.status == 'unpaid' %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>
+                This payment is marked as <strong>unpaid</strong>. Consider updating the status when payment is received.
+            </div>
+        </div>
+    </div>
+</div>
+{% elif payment.status == 'partial' %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <div>
+                This is a <strong>partial payment</strong>. Additional payments may be needed.
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Payment Information -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Customer:</strong></div>
+                    <div class="col-sm-9">
+                        <a href="{% url 'customer_detail' payment.customer.pk %}" class="text-decoration-none">
+                            {{ payment.customer.name }}
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Amount:</strong></div>
+                    <div class="col-sm-9">
+                        <span class="h4 text-success">${{ payment.amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Payment Date:</strong></div>
+                    <div class="col-sm-9">{{ payment.date|date:"M d, Y" }}</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Status:</strong></div>
+                    <div class="col-sm-9">
+                        {% if payment.status == 'paid' %}
+                            <span class="badge bg-success fs-6">{{ payment.get_status_display }}</span>
+                        {% elif payment.status == 'unpaid' %}
+                            <span class="badge bg-danger fs-6">{{ payment.get_status_display }}</span>
+                        {% elif payment.status == 'partial' %}
+                            <span class="badge bg-warning fs-6">{{ payment.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Payment Method:</strong></div>
+                    <div class="col-sm-9">
+                        <span class="badge bg-secondary">{{ payment.get_payment_method_display }}</span>
+                    </div>
+                </div>
+                
+                {% if payment.job %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Related Job:</strong></div>
+                    <div class="col-sm-9">
+                        <a href="{% url 'job_detail' payment.job.pk %}" class="text-decoration-none">
+                            <i class="bi bi-briefcase me-1"></i>Job #{{ payment.job.pk }}: {{ payment.job.description|truncatechars:50 }}
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Payment Type:</strong></div>
+                    <div class="col-sm-9">
+                        <span class="text-muted">General Payment (not linked to specific job)</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if payment.notes %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Notes:</strong></div>
+                    <div class="col-sm-9">{{ payment.notes|linebreaks }}</div>
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="row mb-2">
+                    <div class="col-sm-3"><strong>Recorded:</strong></div>
+                    <div class="col-sm-9">{{ payment.created_at|date:"M d, Y \a\t g:i A" }}</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-3"><strong>Last Updated:</strong></div>
+                    <div class="col-sm-9">{{ payment.updated_at|date:"M d, Y \a\t g:i A" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Customer Quick Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Customer Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>{{ payment.customer.name }}</strong>
+                </div>
+                
+                {% if payment.customer.phone %}
+                <div class="mb-2">
+                    <a href="tel:{{ payment.customer.phone }}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-telephone me-1"></i>{{ payment.customer.phone }}
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if payment.customer.email %}
+                <div class="mb-2">
+                    <a href="mailto:{{ payment.customer.email }}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-envelope me-1"></i>Email Customer
+                    </a>
+                </div>
+                {% endif %}
+                
+                <div class="mb-2">
+                    <a href="{% url 'customer_detail' payment.customer.pk %}" class="btn btn-outline-info btn-sm w-100">
+                        <i class="bi bi-person me-1"></i>View Customer Profile
+                    </a>
+                </div>
+                
+                <div class="d-grid">
+                    <a href="{% url 'payment_create' %}?customer={{ payment.customer.pk }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus me-1"></i>Record Another Payment
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        {% if payment.job %}
+        <!-- Job Quick Info -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Related Job</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Job #{{ payment.job.pk }}</strong>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">{{ payment.job.description|truncatechars:80 }}</small>
+                </div>
+                
+                <div class="mb-2">
+                    <span class="badge bg-light text-dark">Due: {{ payment.job.due_date|date:"M d, Y" }}</span>
+                    {% if payment.job.status == 'pending' %}
+                        <span class="badge bg-warning">{{ payment.job.get_status_display }}</span>
+                    {% elif payment.job.status == 'in_progress' %}
+                        <span class="badge bg-info">{{ payment.job.get_status_display }}</span>
+                    {% elif payment.job.status == 'completed' %}
+                        <span class="badge bg-success">{{ payment.job.get_status_display }}</span>
+                    {% elif payment.job.status == 'delivered' %}
+                        <span class="badge bg-secondary">{{ payment.job.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid">
+                    <a href="{% url 'job_detail' payment.job.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-briefcase me-1"></i>View Job Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Payment Method Details -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Payment Method Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    {% if payment.payment_method == 'cash' %}
+                        <i class="bi bi-cash-stack text-success" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0"><strong>Cash Payment</strong></p>
+                    {% elif payment.payment_method == 'check' %}
+                        <i class="bi bi-receipt text-primary" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0"><strong>Check Payment</strong></p>
+                    {% elif payment.payment_method == 'card' %}
+                        <i class="bi bi-credit-card text-info" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0"><strong>Card Payment</strong></p>
+                    {% elif payment.payment_method == 'bank_transfer' %}
+                        <i class="bi bi-bank text-warning" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0"><strong>Bank Transfer</strong></p>
+                    {% elif payment.payment_method == 'mobile_payment' %}
+                        <i class="bi bi-phone text-success" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0"><strong>Mobile Payment</strong></p>
+                    {% else %}
+                        <i class="bi bi-wallet2 text-secondary" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0"><strong>{{ payment.get_payment_method_display }}</strong></p>
+                    {% endif %}
+                </div>
+                
+                {% if payment.notes %}
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <strong>Reference:</strong><br>
+                        {{ payment.notes|linebreaks }}
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Related Payments -->
+{% if payment.customer.payment_set.count > 1 %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Other Payments from {{ payment.customer.name }}</h5>
+                <a href="{% url 'payment_create' %}?customer={{ payment.customer.pk }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus me-1"></i>Add Payment
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Job</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for other_payment in payment.customer.payment_set.all %}
+                                {% if other_payment.pk != payment.pk %}
+                                <tr>
+                                    <td>{{ other_payment.date|date:"M d, Y" }}</td>
+                                    <td>${{ other_payment.amount|floatformat:2 }}</td>
+                                    <td>{{ other_payment.get_payment_method_display }}</td>
+                                    <td>
+                                        {% if other_payment.status == 'paid' %}
+                                            <span class="badge bg-success">{{ other_payment.get_status_display }}</span>
+                                        {% elif other_payment.status == 'unpaid' %}
+                                            <span class="badge bg-danger">{{ other_payment.get_status_display }}</span>
+                                        {% elif other_payment.status == 'partial' %}
+                                            <span class="badge bg-warning">{{ other_payment.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if other_payment.job %}
+                                            <a href="{% url 'job_detail' other_payment.job.pk %}" class="text-decoration-none">
+                                                Job #{{ other_payment.job.pk }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">General</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'payment_detail' other_payment.pk %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

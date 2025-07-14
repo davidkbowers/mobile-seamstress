@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}Job #{{ job.pk }} - {{ job.customer.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{% url 'job_list' %}">Jobs</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'customer_detail' job.customer.pk %}">{{ job.customer.name }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Job #{{ job.pk }}</li>
+                    </ol>
+                </nav>
+                <h1>Job #{{ job.pk }}</h1>
+                <p class="text-muted mb-0">for {{ job.customer.name }}</p>
+            </div>
+            <div class="btn-group" role="group">
+                <a href="{% url 'job_edit' job.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-2"></i>Edit
+                </a>
+                <a href="{% url 'payment_create' %}?job={{ job.pk }}" class="btn btn-success">
+                    <i class="bi bi-cash me-2"></i>Add Payment
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Status Alert -->
+{% if job.is_overdue %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>
+                This job is <strong>overdue</strong>! Due date was {{ job.due_date|date:"M d, Y" }}.
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Job Information -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Job Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Customer:</strong></div>
+                    <div class="col-sm-9">
+                        <a href="{% url 'customer_detail' job.customer.pk %}" class="text-decoration-none">
+                            {{ job.customer.name }}
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Status:</strong></div>
+                    <div class="col-sm-9">
+                        {% if job.status == 'pending' %}
+                            <span class="badge bg-warning">{{ job.get_status_display }}</span>
+                        {% elif job.status == 'in_progress' %}
+                            <span class="badge bg-info">{{ job.get_status_display }}</span>
+                        {% elif job.status == 'completed' %}
+                            <span class="badge bg-success">{{ job.get_status_display }}</span>
+                        {% elif job.status == 'delivered' %}
+                            <span class="badge bg-secondary">{{ job.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Due Date:</strong></div>
+                    <div class="col-sm-9">
+                        {{ job.due_date|date:"M d, Y" }}
+                        {% if job.is_overdue %}
+                            <span class="badge bg-danger ms-2">Overdue</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Description:</strong></div>
+                    <div class="col-sm-9">{{ job.description|linebreaks }}</div>
+                </div>
+                
+                {% if job.measurements %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Measurements:</strong></div>
+                    <div class="col-sm-9">{{ job.measurements|linebreaks }}</div>
+                </div>
+                {% endif %}
+                
+                {% if job.notes %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Notes:</strong></div>
+                    <div class="col-sm-9">{{ job.notes|linebreaks }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>Created:</strong></div>
+                    <div class="col-sm-9">{{ job.created_at|date:"M d, Y \a\t g:i A" }}</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-3"><strong>Last Updated:</strong></div>
+                    <div class="col-sm-9">{{ job.updated_at|date:"M d, Y \a\t g:i A" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment Summary</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <h3 class="text-success">${{ job.total_payments|floatformat:2 }}</h3>
+                    <p class="mb-0">Total Payments</p>
+                </div>
+                {% if job.outstanding_payment > 0 %}
+                <div class="mb-3">
+                    <h4 class="text-danger">${{ job.outstanding_payment|floatformat:2 }}</h4>
+                    <p class="mb-0">Outstanding</p>
+                </div>
+                {% endif %}
+                <a href="{% url 'payment_create' %}?job={{ job.pk }}" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus me-1"></i>Add Payment
+                </a>
+            </div>
+        </div>
+        
+        <!-- Customer Quick Info -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Customer Contact</h6>
+            </div>
+            <div class="card-body">
+                {% if job.customer.phone %}
+                <div class="mb-2">
+                    <a href="tel:{{ job.customer.phone }}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-telephone me-1"></i>{{ job.customer.phone }}
+                    </a>
+                </div>
+                {% endif %}
+                {% if job.customer.email %}
+                <div class="mb-2">
+                    <a href="mailto:{{ job.customer.email }}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-envelope me-1"></i>Email
+                    </a>
+                </div>
+                {% endif %}
+                <a href="{% url 'customer_detail' job.customer.pk %}" class="btn btn-outline-info btn-sm w-100">
+                    <i class="bi bi-person me-1"></i>View Customer
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reference Images -->
+{% if job.image1 or job.image2 or job.image3 %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-images me-2"></i>Reference Images
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if job.image1 %}
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <img src="{{ job.image1.url }}" alt="Reference Image 1" 
+                                 class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 300px; cursor: pointer;"
+                                 data-bs-toggle="modal" data-bs-target="#imageModal1">
+                            <p class="mt-2 mb-0 text-muted">Image 1</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if job.image2 %}
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <img src="{{ job.image2.url }}" alt="Reference Image 2" 
+                                 class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 300px; cursor: pointer;"
+                                 data-bs-toggle="modal" data-bs-target="#imageModal2">
+                            <p class="mt-2 mb-0 text-muted">Image 2</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if job.image3 %}
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <img src="{{ job.image3.url }}" alt="Reference Image 3" 
+                                 class="img-fluid rounded shadow-sm" 
+                                 style="max-height: 300px; cursor: pointer;"
+                                 data-bs-toggle="modal" data-bs-target="#imageModal3">
+                            <p class="mt-2 mb-0 text-muted">Image 3</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modals -->
+{% if job.image1 %}
+<div class="modal fade" id="imageModal1" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reference Image 1</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="{{ job.image1.url }}" alt="Reference Image 1" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if job.image2 %}
+<div class="modal fade" id="imageModal2" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reference Image 2</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="{{ job.image2.url }}" alt="Reference Image 2" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if job.image3 %}
+<div class="modal fade" id="imageModal3" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reference Image 3</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="{{ job.image3.url }}" alt="Reference Image 3" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Payments Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Payment History</h5>
+                <a href="{% url 'payment_create' %}?job={{ job.pk }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus me-1"></i>Add Payment
+                </a>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.date|date:"M d, Y" }}</td>
+                                    <td>${{ payment.amount|floatformat:2 }}</td>
+                                    <td>{{ payment.get_payment_method_display }}</td>
+                                    <td>
+                                        {% if payment.status == 'paid' %}
+                                            <span class="badge bg-success">{{ payment.get_status_display }}</span>
+                                        {% elif payment.status == 'unpaid' %}
+                                            <span class="badge bg-danger">{{ payment.get_status_display }}</span>
+                                        {% elif payment.status == 'partial' %}
+                                            <span class="badge bg-warning">{{ payment.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ payment.notes|truncatechars:50 }}</td>
+                                    <td>
+                                        <a href="{% url 'payment_edit' payment.pk %}" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-credit-card text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No payments recorded for this job.</p>
+                        <a href="{% url 'payment_create' %}?job={{ job.pk }}" class="btn btn-success">
+                            <i class="bi bi-plus me-2"></i>Add First Payment
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

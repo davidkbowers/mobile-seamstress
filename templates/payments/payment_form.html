@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Seamstress App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ title }}</h1>
+            <a href="{% url 'payment_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Payments
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.customer.id_for_label }}" class="form-label">
+                                    Customer <span class="text-danger">*</span>
+                                </label>
+                                {{ form.customer }}
+                                {% if form.customer.errors %}
+                                    <div class="text-danger small">{{ form.customer.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.job.id_for_label }}" class="form-label">Related Job</label>
+                                {{ form.job }}
+                                {% if form.job.errors %}
+                                    <div class="text-danger small">{{ form.job.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Optional - link payment to a specific job</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                    Amount <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.amount }}
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="text-danger small">{{ form.amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">
+                                    Payment Date <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.payment_method.id_for_label }}" class="form-label">Payment Method</label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}
+                            <div class="text-danger small">{{ form.payment_method.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            Notes
+                            <button type="button" class="voice-btn ms-2" data-field="notes" title="Voice input">
+                                <i class="bi bi-mic"></i>
+                            </button>
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small">{{ form.notes.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Reference number, check number, or any additional notes</div>
+                    </div>
+                    
+                    <!-- Payment Method Quick Tips -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bi bi-lightbulb me-2"></i>Payment Method Tips
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="mb-0 small">
+                                        <li><strong>Cash:</strong> Record in notes: "Cash payment"</li>
+                                        <li><strong>Check:</strong> Note check number in notes field</li>
+                                        <li><strong>Card:</strong> Note last 4 digits if needed</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="mb-0 small">
+                                        <li><strong>Bank Transfer:</strong> Record confirmation number</li>
+                                        <li><strong>Mobile Payment:</strong> Note app used (Venmo, etc.)</li>
+                                        <li><strong>Other:</strong> Specify method in notes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'payment_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Record Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voice Input JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Voice input functionality
+    const voiceButtons = document.querySelectorAll('.voice-btn');
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        voiceButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const fieldName = this.getAttribute('data-field');
+                const textarea = document.querySelector(`[data-voice-field="${fieldName}"]`);
+                
+                if (!textarea) return;
+                
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                this.classList.add('listening');
+                this.innerHTML = '<i class="bi bi-mic-fill"></i>';
+                
+                recognition.onresult = function(event) {
+                    const result = event.results[0][0].transcript;
+                    textarea.value = result;
+                    textarea.focus();
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                };
+                
+                recognition.onend = function() {
+                    button.classList.remove('listening');
+                    button.innerHTML = '<i class="bi bi-mic"></i>';
+                };
+                
+                recognition.start();
+            });
+        });
+    } else {
+        // Hide voice buttons if not supported
+        voiceButtons.forEach(button => {
+            button.style.display = 'none';
+        });
+    }
+    
+    // Update job options when customer changes
+    const customerSelect = document.getElementById('{{ form.customer.id_for_label }}');
+    const jobSelect = document.getElementById('{{ form.job.id_for_label }}');
+    
+    if (customerSelect && jobSelect) {
+        customerSelect.addEventListener('change', function() {
+            const customerId = this.value;
+            
+            // Clear job options
+            jobSelect.innerHTML = '<option value="">No specific job</option>';
+            
+            if (customerId) {
+                // Fetch jobs for selected customer
+                fetch(`/api/customer/${customerId}/jobs/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.jobs.forEach(job => {
+                            const option = document.createElement('option');
+                            option.value = job.id;
+                            option.textContent = `Job #${job.id}: ${job.description.substring(0, 50)}`;
+                            if (job.description.length > 50) option.textContent += '...';
+                            jobSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching jobs:', error);
+                    });
+            }
+        });
+    }
+    
+    // Set today's date as default
+    const dateField = document.getElementById('{{ form.date.id_for_label }}');
+    if (dateField && !dateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+});
+</script>
+{% endblock %}

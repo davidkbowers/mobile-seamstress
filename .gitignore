@@ -208,3 +208,4 @@ __marimo__/
 customers/migrations/0001_initial.py
 jobs/migrations/0001_initial.py
 payments/migrations/0001_initial.py
+.env.example

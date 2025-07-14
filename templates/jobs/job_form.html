@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Seamstress App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ title }}</h1>
+            <a href="{% url 'job_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Jobs
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.customer.id_for_label }}" class="form-label">
+                                    Customer <span class="text-danger">*</span>
+                                </label>
+                                {{ form.customer }}
+                                {% if form.customer.errors %}
+                                    <div class="text-danger small">{{ form.customer.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="{{ form.due_date.id_for_label }}" class="form-label">
+                                    Due Date <span class="text-danger">*</span>
+                                </label>
+                                {{ form.due_date }}
+                                {% if form.due_date.errors %}
+                                    <div class="text-danger small">{{ form.due_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Job Description <span class="text-danger">*</span>
+                            <button type="button" class="voice-btn ms-2" data-field="description" title="Voice input">
+                                <i class="bi bi-mic"></i>
+                            </button>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Describe the work to be done, fabric details, style, etc.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.measurements.id_for_label }}" class="form-label">
+                            Measurements
+                            <button type="button" class="voice-btn ms-2" data-field="measurements" title="Voice input">
+                                <i class="bi bi-mic"></i>
+                            </button>
+                        </label>
+                        {{ form.measurements }}
+                        {% if form.measurements.errors %}
+                            <div class="text-danger small">{{ form.measurements.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Customer measurements and sizing information</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            Additional Notes
+                            <button type="button" class="voice-btn ms-2" data-field="notes" title="Voice input">
+                                <i class="bi bi-mic"></i>
+                            </button>
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small">{{ form.notes.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Any additional notes or special instructions</div>
+                    </div>
+                    
+                    <!-- Image Upload Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="bi bi-images me-2"></i>Reference Images
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.image1.id_for_label }}" class="form-label">Image 1</label>
+                                    {{ form.image1 }}
+                                    {% if form.image1.errors %}
+                                        <div class="text-danger small">{{ form.image1.errors }}</div>
+                                    {% endif %}
+                                    {% if form.instance.image1 %}
+                                        <div class="mt-2">
+                                            <img src="{{ form.instance.image1.url }}" alt="Current image 1" 
+                                                 class="img-thumbnail" style="max-height: 100px;">
+                                            <div class="form-text">Current image</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.image2.id_for_label }}" class="form-label">Image 2</label>
+                                    {{ form.image2 }}
+                                    {% if form.image2.errors %}
+                                        <div class="text-danger small">{{ form.image2.errors }}</div>
+                                    {% endif %}
+                                    {% if form.instance.image2 %}
+                                        <div class="mt-2">
+                                            <img src="{{ form.instance.image2.url }}" alt="Current image 2" 
+                                                 class="img-thumbnail" style="max-height: 100px;">
+                                            <div class="form-text">Current image</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.image3.id_for_label }}" class="form-label">Image 3</label>
+                                    {{ form.image3 }}
+                                    {% if form.image3.errors %}
+                                        <div class="text-danger small">{{ form.image3.errors }}</div>
+                                    {% endif %}
+                                    {% if form.instance.image3 %}
+                                        <div class="mt-2">
+                                            <img src="{{ form.instance.image3.url }}" alt="Current image 3" 
+                                                 class="img-thumbnail" style="max-height: 100px;">
+                                            <div class="form-text">Current image</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Upload reference images, design sketches, or inspiration photos
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'job_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Save Job
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voice Input JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Voice input functionality
+    const voiceButtons = document.querySelectorAll('.voice-btn');
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        voiceButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const fieldName = this.getAttribute('data-field');
+                const textarea = document.querySelector(`[data-voice-field="${fieldName}"]`);
+                
+                if (!textarea) return;
+                
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                this.classList.add('listening');
+                this.innerHTML = '<i class="bi bi-mic-fill"></i>';
+                
+                recognition.onresult = function(event) {
+                    const result = event.results[0][0].transcript;
+                    textarea.value = result;
+                    textarea.focus();
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                };
+                
+                recognition.onend = function() {
+                    button.classList.remove('listening');
+                    button.innerHTML = '<i class="bi bi-mic"></i>';
+                };
+                
+                recognition.start();
+            });
+        });
+    } else {
+        // Hide voice buttons if not supported
+        voiceButtons.forEach(button => {
+            button.style.display = 'none';
+        });
+    }
+});
+</script>
+{% endblock %}

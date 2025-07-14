@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ customer.name }} - Customer Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{% url 'customer_list' %}">Customers</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ customer.name }}</li>
+                    </ol>
+                </nav>
+                <h1>{{ customer.name }}</h1>
+            </div>
+            <div class="btn-group" role="group">
+                <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-2"></i>Edit
+                </a>
+                <a href="{% url 'job_create' %}?customer={{ customer.pk }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>New Job
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Information -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-4"><strong>Name:</strong></div>
+                    <div class="col-sm-8">{{ customer.name }}</div>
+                </div>
+                {% if customer.phone %}
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Phone:</strong></div>
+                    <div class="col-sm-8">
+                        <a href="tel:{{ customer.phone }}" class="text-decoration-none">
+                            <i class="bi bi-telephone me-1"></i>{{ customer.phone }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% if customer.email %}
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Email:</strong></div>
+                    <div class="col-sm-8">
+                        <a href="mailto:{{ customer.email }}" class="text-decoration-none">
+                            <i class="bi bi-envelope me-1"></i>{{ customer.email }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% if customer.address %}
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Address:</strong></div>
+                    <div class="col-sm-8">{{ customer.address|linebreaks }}</div>
+                </div>
+                {% endif %}
+                {% if customer.notes %}
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Notes:</strong></div>
+                    <div class="col-sm-8">{{ customer.notes|linebreaks }}</div>
+                </div>
+                {% endif %}
+                <div class="row mt-2">
+                    <div class="col-sm-4"><strong>Customer Since:</strong></div>
+                    <div class="col-sm-8">{{ customer.created_at|date:"M d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h3 class="text-primary">{{ customer.total_jobs_count }}</h3>
+                        <p class="mb-0">Total Jobs</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-warning">{{ customer.active_jobs_count }}</h3>
+                        <p class="mb-0">Active Jobs</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-12">
+                        <h4 class="text-danger">${{ customer.outstanding_balance|floatformat:2 }}</h4>
+                        <p class="mb-0">Outstanding Balance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Jobs Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Jobs</h5>
+                <a href="{% url 'job_create' %}?customer={{ customer.pk }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus me-1"></i>Add Job
+                </a>
+            </div>
+            <div class="card-body">
+                {% if jobs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in jobs %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'job_detail' job.pk %}" class="text-decoration-none">
+                                            {{ job.description|truncatechars:60 }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {{ job.due_date|date:"M d, Y" }}
+                                        {% if job.is_overdue %}
+                                            <span class="badge bg-danger ms-1">Overdue</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if job.status == 'pending' %}
+                                            <span class="badge bg-warning">{{ job.get_status_display }}</span>
+                                        {% elif job.status == 'in_progress' %}
+                                            <span class="badge bg-info">{{ job.get_status_display }}</span>
+                                        {% elif job.status == 'completed' %}
+                                            <span class="badge bg-success">{{ job.get_status_display }}</span>
+                                        {% elif job.status == 'delivered' %}
+                                            <span class="badge bg-secondary">{{ job.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'job_detail' job.pk %}" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'job_edit' job.pk %}" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-briefcase text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No jobs yet for this customer.</p>
+                        <a href="{% url 'job_create' %}?customer={{ customer.pk }}" class="btn btn-primary">
+                            <i class="bi bi-plus me-2"></i>Create First Job
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payments Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Payment History</h5>
+                <a href="{% url 'payment_create' %}?customer={{ customer.pk }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus me-1"></i>Add Payment
+                </a>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Job</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.date|date:"M d, Y" }}</td>
+                                    <td>${{ payment.amount|floatformat:2 }}</td>
+                                    <td>{{ payment.get_payment_method_display }}</td>
+                                    <td>
+                                        {% if payment.status == 'paid' %}
+                                            <span class="badge bg-success">{{ payment.get_status_display }}</span>
+                                        {% elif payment.status == 'unpaid' %}
+                                            <span class="badge bg-danger">{{ payment.get_status_display }}</span>
+                                        {% elif payment.status == 'partial' %}
+                                            <span class="badge bg-warning">{{ payment.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.job %}
+                                            <a href="{% url 'job_detail' payment.job.pk %}" class="text-decoration-none">
+                                                {{ payment.job.description|truncatechars:30 }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">General Payment</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'payment_edit' payment.pk %}" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-credit-card text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No payments recorded for this customer.</p>
+                        <a href="{% url 'payment_create' %}?customer={{ customer.pk }}" class="btn btn-success">
+                            <i class="bi bi-plus me-2"></i>Add First Payment
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
