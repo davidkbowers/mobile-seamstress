@@ -15,13 +15,15 @@ class CustomerForm(forms.ModelForm):
                 'data-voice-field': 'name'
             }),
             'phone': forms.TextInput(attrs={
-                'class': 'form-control',
+                'class': 'form-control voice-input',
                 'placeholder': 'Phone number',
-                'type': 'tel'
+                'type': 'tel',
+                'data-voice-field': 'phone'
             }),
             'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Email address'
+                'class': 'form-control voice-input',
+                'placeholder': 'Email address',
+                'data-voice-field': 'email'
             }),
             'address': forms.Textarea(attrs={
                 'class': 'form-control voice-input',
