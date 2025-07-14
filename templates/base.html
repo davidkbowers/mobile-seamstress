@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Seamstress App{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        .voice-btn {
+            border: none;
+            background: none;
+            color: #6c757d;
+            padding: 5px;
+        }
+        .voice-btn:hover {
+            color: #007bff;
+        }
+        .voice-btn.listening {
+            color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .mobile-friendly {
+            touch-action: manipulation;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.125rem;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+            .card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="bi bi-scissors me-2"></i>Seamstress App
+            </a>
+            
+            {% if user.is_authenticated %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'customer_list' %}">
+                            <i class="bi bi-people me-1"></i>Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'job_list' %}">
+                            <i class="bi bi-briefcase me-1"></i>Jobs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'payment_list' %}">
+                            <i class="bi bi-credit-card me-1"></i>Payments
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>{{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                <i class="bi bi-box-arrow-right me-1"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-4 mobile-friendly">
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Voice Input Script -->
+    <script>
+        class VoiceInput {
+            constructor() {
+                this.recognition = null;
+                this.isListening = false;
+                this.currentField = null;
+                this.initSpeechRecognition();
+                this.addVoiceButtons();
+            }
+
+            initSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        if (this.currentField) {
+                            const currentValue = this.currentField.value;
+                            this.currentField.value = currentValue ? currentValue + ' ' + transcript : transcript;
+                        }
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        this.updateVoiceButtons();
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        this.isListening = false;
+                        this.updateVoiceButtons();
+                    };
+                }
+            }
+
+            addVoiceButtons() {
+                const voiceFields = document.querySelectorAll('.voice-input');
+                voiceFields.forEach(field => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'input-group';
+                    
+                    field.parentNode.insertBefore(wrapper, field);
+                    wrapper.appendChild(field);
+                    
+                    const voiceBtn = document.createElement('button');
+                    voiceBtn.type = 'button';
+                    voiceBtn.className = 'btn btn-outline-secondary voice-btn';
+                    voiceBtn.innerHTML = '<i class="bi bi-mic"></i>';
+                    voiceBtn.title = 'Voice input';
+                    
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'input-group-append';
+                    btnGroup.appendChild(voiceBtn);
+                    wrapper.appendChild(btnGroup);
+                    
+                    voiceBtn.addEventListener('click', () => {
+                        this.toggleVoiceInput(field, voiceBtn);
+                    });
+                });
+            }
+
+            toggleVoiceInput(field, button) {
+                if (!this.recognition) {
+                    alert('Speech recognition is not supported in your browser.');
+                    return;
+                }
+
+                if (this.isListening) {
+                    this.recognition.stop();
+                    return;
+                }
+
+                this.currentField = field;
+                this.isListening = true;
+                this.updateVoiceButtons();
+                
+                try {
+                    this.recognition.start();
+                } catch (error) {
+                    console.error('Failed to start speech recognition:', error);
+                    this.isListening = false;
+                    this.updateVoiceButtons();
+                }
+            }
+
+            updateVoiceButtons() {
+                const buttons = document.querySelectorAll('.voice-btn');
+                buttons.forEach(btn => {
+                    if (this.isListening) {
+                        btn.classList.add('listening');
+                        btn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+                    } else {
+                        btn.classList.remove('listening');
+                        btn.innerHTML = '<i class="bi bi-mic"></i>';
+                    }
+                });
+            }
+        }
+
+        // Initialize voice input when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            new VoiceInput();
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
